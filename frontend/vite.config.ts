@@ -3,6 +3,8 @@ import vue from '@vitejs/plugin-vue'
 
 export default defineConfig({
   plugins: [vue()],
+  // App lives under /app/ — the landing page takes the root (/)
+  base: '/app/',
   build: {
     outDir: 'dist',
     minify: 'esbuild',

@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scrapiy — Web scraping without the subscription</title>
+<style>
+  /* ---------- tokens ---------- */
+  :root{
+    --bg:#fafafa; --surface:#ffffff; --surface2:#f2f2f4;
+    --ink:#111114; --ink2:#56565c; --ink3:#9a9aa0;
+    --line:rgba(0,0,0,.10); --line-soft:rgba(0,0,0,.06);
+    --accent:#0071e3; --ok:#1a9c3e;
+    --code-bg:#16161a; --code-ink:#dcdce0; --code-dim:#8b8b92;
+    --code-ok:#4ade80; --code-accent:#7cb8ff;
+    --shadow:0 24px 70px rgba(0,0,0,.13), 0 2px 10px rgba(0,0,0,.05);
+  }
+  html[data-theme="dark"]{
+    --bg:#0a0a0c; --surface:#151518; --surface2:#1d1d21;
+    --ink:#f2f2f4; --ink2:#a4a4ac; --ink3:#5f5f66;
+    --line:rgba(255,255,255,.11); --line-soft:rgba(255,255,255,.06);
+    --accent:#2f95ff; --ok:#34d269;
+    --code-bg:#0f0f12; --code-ink:#d6d6da; --code-dim:#77777e;
+    --shadow:0 24px 70px rgba(0,0,0,.6), 0 2px 10px rgba(0,0,0,.4);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Segoe UI",Roboto,sans-serif;
+    background:var(--bg); color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+    transition:background .4s ease,color .4s ease;
+  }
+  .mono{font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace}
+  ::selection{background:color-mix(in srgb,var(--accent) 25%,transparent)}
+
+  /* faint dot grid — technical paper, not aurora */
+  body::before{
+    content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
+    background-image:radial-gradient(color-mix(in srgb,var(--ink) 13%,transparent) .8px,transparent .8px);
+    background-size:26px 26px;
+    mask-image:radial-gradient(ellipse 90% 60% at 50% 0%,#000 30%,transparent 75%);
+    -webkit-mask-image:radial-gradient(ellipse 90% 60% at 50% 0%,#000 30%,transparent 75%);
+  }
+
+  .wrap{max-width:1140px;margin:0 auto;padding:0 28px}
+
+  /* ---------- menubar ---------- */
+  .bar{
+    position:sticky;top:0;z-index:50;
+    background:color-mix(in srgb,var(--bg) 78%,transparent);
+    backdrop-filter:blur(22px) saturate(170%);-webkit-backdrop-filter:blur(22px) saturate(170%);
+    border-bottom:1px solid var(--line-soft);
+  }
+  .bar-in{display:flex;align-items:center;gap:26px;height:52px}
+  .wordmark{font-weight:700;font-size:14.5px;letter-spacing:-.01em}
+  .wordmark i{font-style:normal;color:var(--accent)}
+  .bar nav{display:flex;gap:22px;margin-left:8px}
+  .bar a{color:var(--ink2);text-decoration:none;font-size:13px;font-weight:500;transition:color .2s}
+  .bar a:hover{color:var(--ink)}
+  .bar .right{margin-left:auto;display:flex;align-items:center;gap:14px}
+  .seg{display:flex;background:var(--surface2);border:1px solid var(--line-soft);border-radius:8px;padding:2px}
+  .seg button{border:0;background:transparent;cursor:pointer;font-size:12px;padding:4px 10px;border-radius:6px;color:var(--ink2)}
+  .seg button.on{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+  .bar .open{
+    font-size:13px;font-weight:600;color:#fff;background:var(--accent);
+    padding:7px 15px;border-radius:8px;text-decoration:none;transition:filter .2s,transform .15s;
+  }
+  .bar .open:hover{filter:brightness(1.08)} .bar .open:active{transform:scale(.97)}
+
+  /* ---------- hero ---------- */
+  .hero{padding:92px 0 0}
+  .kicker{font-size:12px;letter-spacing:.14em;color:var(--ink3);text-transform:uppercase;margin-bottom:22px}
+  .kicker b{color:var(--ok);font-weight:600}
+  h1{
+    font-size:clamp(44px,7vw,86px);font-weight:800;letter-spacing:-.045em;line-height:1.0;
+    max-width:820px;
+  }
+  h1 em{font-style:normal;color:var(--ink3)}
+  .lede{font-size:clamp(16px,2vw,19px);color:var(--ink2);max-width:560px;margin:26px 0 0;line-height:1.6}
+  .hero-cta{display:flex;gap:12px;margin-top:34px;flex-wrap:wrap}
+  .btn{
+    display:inline-flex;align-items:center;gap:8px;cursor:pointer;text-decoration:none;border:0;
+    font-size:14.5px;font-weight:600;padding:12px 22px;border-radius:10px;
+    transition:transform .15s,filter .2s,box-shadow .2s,background .2s;
+  }
+  .btn:active{transform:scale(.97)}
+  .btn-fill{background:var(--ink);color:var(--bg)}
+  .btn-fill:hover{filter:brightness(1.15);transform:translateY(-1px)}
+  .btn-line{background:transparent;color:var(--ink);border:1px solid var(--line);box-shadow:none}
+  .btn-line:hover{border-color:var(--ink3);transform:translateY(-1px)}
+  .btn-accent{background:var(--accent);color:#fff}
+  .btn-accent:hover{filter:brightness(1.08);transform:translateY(-1px)}
+  .btn[disabled]{opacity:.55;cursor:default;transform:none!important}
+
+  /* ---------- the window ---------- */
+  .win-zone{margin:64px 0 0;position:relative}
+  .win{
+    border-radius:14px;overflow:hidden;
+    background:var(--surface);border:1px solid var(--line);
+    box-shadow:var(--shadow);
+  }
+  .tbar{
+    display:flex;align-items:center;gap:12px;height:44px;padding:0 14px;
+    background:var(--surface2);border-bottom:1px solid var(--line-soft);
+  }
+  .lights{display:flex;gap:7px}
+  .lt{width:12px;height:12px;border-radius:50%}
+  .lt.r{background:#ff5f57}.lt.y{background:#febc2e}.lt.g{background:#28c840}
+  .tbar .path{font-size:12px;color:var(--ink3)}
+  .tbar .live{
+    margin-left:auto;display:flex;align-items:center;gap:6px;
+    font-size:11px;font-weight:600;color:var(--ok);
+    border:1px solid color-mix(in srgb,var(--ok) 35%,transparent);
+    padding:3px 10px;border-radius:999px;
+  }
+  .tbar .live .pip{width:6px;height:6px;border-radius:50%;background:var(--ok);animation:pip 2s infinite}
+  @keyframes pip{0%,100%{opacity:1}50%{opacity:.35}}
+  .win-grid{display:grid;grid-template-columns:1.25fr 1fr;min-height:392px}
+
+  .pane-left{padding:18px;border-right:1px solid var(--line-soft);position:relative;overflow:hidden}
+  .pane-head{
+    display:flex;align-items:baseline;justify-content:space-between;
+    font-size:11px;letter-spacing:.1em;color:var(--ink3);text-transform:uppercase;
+    padding-bottom:10px;border-bottom:1px solid var(--line-soft);margin-bottom:6px;
+  }
+  .scan{
+    position:absolute;left:0;right:0;top:-12%;height:64px;opacity:0;pointer-events:none;z-index:2;
+    background:linear-gradient(to bottom,transparent,color-mix(in srgb,var(--accent) 14%,transparent) 42%,color-mix(in srgb,var(--accent) 45%,transparent) 50%,color-mix(in srgb,var(--accent) 14%,transparent) 58%,transparent);
+  }
+  .pane-left.scanning .scan{opacity:1;animation:sweep 1.5s cubic-bezier(.45,.05,.3,1) forwards}
+  @keyframes sweep{from{top:-14%}to{top:106%}}
+  .row{
+    display:grid;grid-template-columns:1fr 92px;gap:12px;align-items:center;
+    padding:11px 8px;border-bottom:1px solid var(--line-soft);
+    opacity:0;transform:translateY(7px);transition:.4s cubic-bezier(.2,.8,.2,1);
+  }
+  .row.lit{opacity:1;transform:none}
+  .row .nm{font-size:13.5px;font-weight:600;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .row .pr{font-size:13px;font-weight:700;color:var(--ok);text-align:right;font-variant-numeric:tabular-nums}
+  .row .lk{grid-column:1/-1;font-size:11px;color:var(--ink3);margin-top:-6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .footstat{
+    display:flex;gap:16px;padding:12px 8px 2px;
+    font-size:11.5px;color:var(--ink3);font-family:"SF Mono",ui-monospace,Menlo,monospace;
+  }
+  .footstat .ok{color:var(--ok);font-weight:600}
+
+  .pane-right{display:flex;flex-direction:column;background:var(--code-bg)}
+  .term{
+    flex:1;padding:16px 18px;font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace;
+    font-size:12px;line-height:1.75;color:var(--code-ink);overflow:auto;
+  }
+  .term .p{color:var(--code-ok)}
+  .term .dim{color:var(--code-dim)}
+  .term .acc{color:var(--code-accent)}
+  .term .cur{display:inline-block;width:7px;height:13px;background:var(--code-ok);vertical-align:-2px;animation:blink 1.05s steps(1) infinite}
+  @keyframes blink{50%{opacity:0}}
+
+  /* ---------- sections ---------- */
+  section{padding:104px 0 0}
+  .shead{display:flex;align-items:baseline;gap:18px;border-top:1px solid var(--line);padding-top:26px}
+  .snum{font-size:12px;color:var(--ink3);letter-spacing:.12em}
+  .shead h2{font-size:clamp(26px,3.4vw,40px);font-weight:800;letter-spacing:-.035em}
+  .ssub{color:var(--ink2);margin-top:12px;max-width:520px;font-size:15.5px;line-height:1.6}
+
+  /* capabilities — editorial rows */
+  .caps{margin-top:44px;border-top:1px solid var(--line)}
+  .cap{
+    display:grid;grid-template-columns:44px 220px 1fr 1fr;gap:24px;align-items:baseline;
+    padding:22px 4px;border-bottom:1px solid var(--line);
+    transition:background .2s;
+  }
+  .cap:hover{background:color-mix(in srgb,var(--ink) 3%,transparent)}
+  .cap .n{font-size:12px;color:var(--ink3)}
+  .cap h3{font-size:16px;font-weight:700;letter-spacing:-.015em}
+  .cap p{font-size:13.5px;color:var(--ink2);line-height:1.55}
+  .cap code{
+    font-family:"SF Mono",ui-monospace,Menlo,monospace;font-size:12px;color:var(--ink2);
+    background:var(--surface2);border:1px solid var(--line-soft);border-radius:7px;padding:9px 12px;
+    display:block;white-space:pre;overflow-x:auto;line-height:1.6;
+  }
+
+  /* steps */
+  .steps{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin-top:44px;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  .step{padding:26px 24px;border-right:1px solid var(--line);background:var(--surface)}
+  .step:last-child{border-right:0}
+  .step .code{font-size:11px;letter-spacing:.14em;color:var(--accent);font-weight:600}
+  .step h4{font-size:17px;font-weight:800;letter-spacing:-.02em;margin:10px 0 8px}
+  .step p{font-size:13px;color:var(--ink2);line-height:1.55}
+
+  /* numbers — single hairline table */
+  .nums{display:grid;grid-template-columns:repeat(4,1fr);margin-top:44px;border-top:1px solid var(--line)}
+  .num{padding:30px 8px 6px;border-bottom:0}
+  .num b{display:block;font-size:clamp(30px,4vw,46px);font-weight:800;letter-spacing:-.04em;font-variant-numeric:tabular-nums}
+  .num span{font-size:12.5px;color:var(--ink3);letter-spacing:.02em}
+
+  /* final cta */
+  .final{padding:110px 0 40px;text-align:left}
+  .final h2{font-size:clamp(34px,5vw,60px);font-weight:800;letter-spacing:-.04em;line-height:1.05}
+  .final p{color:var(--ink2);margin:18px 0 30px;font-size:16px;max-width:480px;line-height:1.6}
+
+  footer{
+    border-top:1px solid var(--line);margin-top:90px;
+    padding:26px 0 34px;display:flex;gap:20px;align-items:center;flex-wrap:wrap;
+    font-size:12px;color:var(--ink3);
+  }
+  footer .sp{margin-left:auto;display:flex;gap:18px}
+  footer a{color:var(--ink2);text-decoration:none}
+  footer a:hover{color:var(--ink)}
+
+  .rv{opacity:0;transform:translateY(22px);transition:opacity .65s ease,transform .65s cubic-bezier(.2,.8,.2,1)}
+  .rv.in{opacity:1;transform:none}
+
+  @media (max-width:900px){
+    .win-grid{grid-template-columns:1fr}
+    .pane-left{border-right:0;border-bottom:1px solid var(--line-soft)}
+    .cap{grid-template-columns:34px 1fr;grid-template-rows:auto auto auto}
+    .cap p{grid-column:2} .cap code{grid-column:1/-1}
+    .steps{grid-template-columns:1fr 1fr}
+    .step:nth-child(2){border-right:0}
+    .step:nth-child(1),.step:nth-child(2){border-bottom:1px solid var(--line)}
+    .nums{grid-template-columns:1fr 1fr}
+    .bar nav{display:none}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{animation:none!important;transition:none!important}
+    .rv{opacity:1;transform:none}
+    .row{opacity:1;transform:none}
+  }
+</style>
+</head>
+<body>
+
+<header class="bar">
+  <div class="wrap bar-in">
+    <span class="wordmark">Scrapiy<i>.</i></span>
+    <nav>
+      <a href="#caps">Capabilities</a>
+      <a href="#how">How it works</a>
+      <a href="#numbers">Limits</a>
+    </nav>
+    <div class="right">
+      <div class="seg" role="group" aria-label="Appearance">
+        <button id="thL" class="on" aria-label="Light">Light</button>
+        <button id="thD" aria-label="Dark">Dark</button>
+      </div>
+      <a class="open" href="/app/">Open app</a>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <!-- hero -->
+  <section class="hero">
+    <p class="kicker mono"><b>●</b>&nbsp; Free forever &nbsp;·&nbsp; Cloudflare Workers &nbsp;·&nbsp; no card, no subscription</p>
+    <h1>Web scraping<br>without <em>the subscription.</em></h1>
+    <p class="lede">Point Scrapiy at a listing page. It finds the repeating cards, extracts the fields, follows the pagination — and hands you a CSV. Self-hosted on Cloudflare's free tier. The window below is wired to a real, working scraper.</p>
+    <div class="hero-cta">
+      <a class="btn btn-fill" href="/app/">Open the app</a>
+      <button class="btn btn-line" id="runBtn">▶&nbsp; Run a live scrape</button>
+    </div>
+
+    <!-- live window -->
+    <div class="win-zone rv">
+      <div class="win">
+        <div class="tbar">
+          <div class="lights"><span class="lt r"></span><span class="lt y"></span><span class="lt g"></span></div>
+          <span class="path mono">scrapiy — webscraper.io/test-sites/e-commerce</span>
+          <span class="live"><span class="pip"></span>LIVE</span>
+        </div>
+        <div class="win-grid">
+          <div class="pane-left" id="pane">
+            <div class="scan"></div>
+            <div class="pane-head mono"><span>extracted items</span><span id="selLabel">.product-wrapper</span></div>
+            <div id="rows"></div>
+            <div class="footstat mono" id="stat">idle — press “Run a live scrape”</div>
+          </div>
+          <div class="pane-right">
+            <div class="term" id="term"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 01 capabilities -->
+  <section id="caps" class="rv">
+    <div class="shead"><span class="snum mono">01</span><h2>What it does</h2></div>
+    <p class="ssub">Everything the $29–500/month tools charge for — as ~700 lines of TypeScript you can read.</p>
+    <div class="caps">
+      <div class="cap"><span class="n mono">a.</span><h3>Auto-detection</h3><p>Finds the container that repeats across a listing, then pulls name, price and link from every instance. No selector writing needed.</p><code>scan(url) → 20 items · selector: li</code></div>
+      <div class="cap"><span class="n mono">b.</span><h3>Visual selector</h3><p>Load the page, click a card, pick its fields. Saved as a reusable recipe — the point-and-click flow, minus the black box.</p><code>item: .product-wrapper · price: span[itemprop=price]</code></div>
+      <div class="cap"><span class="n mono">c.</span><h3>Pagination</h3><p>Follows rel="next" links or ?page= parameters and merges everything into one dataset. Stops at dead pages automatically.</p><code>{mode:"page_param", max_pages:50} → 12 items / 2 pages</code></div>
+      <div class="cap"><span class="n mono">d.</span><h3>Schedules</h3><p>Any recipe can re-run every N hours on a cron trigger. Price monitoring that costs nothing to leave on.</p><code>POST /api/recipes/:id/schedule {"intervalHours":24}</code></div>
+      <div class="cap"><span class="n mono">e.</span><h3>REST API</h3><p>Run recipes from Python, Sheets, n8n, cron — anywhere HTTP works. Keyed, rate-limited, CSV or JSON out.</p><code>curl -H "X-API-Key: …" -d '{"recipe_id":"…"}' /api/v1/run</code></div>
+      <div class="cap"><span class="n mono">f.</span><h3>JS rendering</h3><p>JS-only sites escalate to Cloudflare's headless browser automatically — same call, no extra infrastructure to run.</p><code>tier 1 static → tier 2 browser (10 min/day free)</code></div>
+    </div>
+  </section>
+
+  <!-- 02 how -->
+  <section id="how" class="rv">
+    <div class="shead"><span class="snum mono">02</span><h2>The whole story is four steps</h2></div>
+    <p class="ssub">Every scraper — from a $500 SaaS to a ten-line script — does exactly this. The demo walks each step against a real page.</p>
+    <div class="steps">
+      <div class="step"><span class="code mono">01 FETCH</span><h4>Download</h4><p>Gets the page's HTML with real browser headers — the same bytes your browser receives.</p></div>
+      <div class="step"><span class="code mono">02 DETECT</span><h4>Find cards</h4><p>Scans siblings for a container that repeats — that repetition is the product grid.</p></div>
+      <div class="step"><span class="code mono">03 EXTRACT</span><h4>Pull fields</h4><p>Reads name, price, link from every card. Your selectors override the guesswork.</p></div>
+      <div class="step"><span class="code mono">04 EXPORT</span><h4>Deliver</h4><p>CSV, JSON, or a saved recipe your code can call forever after.</p></div>
+    </div>
+  </section>
+
+  <!-- 03 numbers -->
+  <section id="numbers" class="rv">
+    <div class="shead"><span class="snum mono">03</span><h2>The fine print, upfront</h2></div>
+    <p class="ssub">Free-tier ceilings, stated plainly — because "unlimited" pages are the ones that get throttled.</p>
+    <div class="nums">
+      <div class="num"><b>100k</b><span>worker requests / day</span></div>
+      <div class="num"><b>10 min</b><span>headless browser / day</span></div>
+      <div class="num"><b>1,000</b><span>API calls / day / key</span></div>
+      <div class="num"><b>$0</b><span>per month · forever</span></div>
+    </div>
+  </section>
+
+  <!-- final -->
+  <section class="final rv">
+    <h2>Your data pipeline<br>shouldn't be a rental.</h2>
+    <p>Every recipe, key and export lives in your own Cloudflare account. Read the source, change the rules, delete it all — it's yours.</p>
+    <div class="hero-cta">
+      <a class="btn btn-accent" href="/app/">Open Scrapiy</a>
+      <button class="btn btn-line" id="runBtn2">▶&nbsp; Watch it scrape</button>
+    </div>
+  </section>
+
+  <footer>
+    <span>Scrapiy — runs entirely on Cloudflare Workers free tier.</span>
+    <div class="sp">
+      <a href="/app/">App</a>
+      <a href="/health">Status</a>
+    </div>
+  </footer>
+</main>
+
+<script>
+(function(){
+  "use strict";
+  var APP = "https://scrapiy.izganesh-marketplace.workers.dev";
+  var TARGET = "https://webscraper.io/test-sites/e-commerce/static/computers/laptops";
+  var CMD = "scrapiy run --auto --url " + TARGET;
+  var reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  /* theme */
+  var html = document.documentElement;
+  var q = new URLSearchParams(location.search).get("theme");
+  var saved = null; try{ saved = localStorage.getItem("scrapiy-theme"); }catch(e){}
+  apply(q || saved || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"));
+  function apply(t){
+    html.setAttribute("data-theme", t);
+    document.getElementById("thL").classList.toggle("on", t === "light");
+    document.getElementById("thD").classList.toggle("on", t === "dark");
+  }
+  document.getElementById("thL").onclick = function(){ apply("light"); try{localStorage.setItem("scrapiy-theme","light")}catch(e){} };
+  document.getElementById("thD").onclick = function(){ apply("dark"); try{localStorage.setItem("scrapiy-theme","dark")}catch(e){} };
+
+  /* reveal */
+  var io = new IntersectionObserver(function(es){
+    es.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add("in"); io.unobserve(e.target); } });
+  }, {threshold:.1});
+  document.querySelectorAll(".rv").forEach(function(el){ io.observe(el); });
+
+  /* ---- live window ---- */
+  var term  = document.getElementById("term");
+  var rowsEl= document.getElementById("rows");
+  var stat  = document.getElementById("stat");
+  var pane  = document.getElementById("pane");
+  var selLbl= document.getElementById("selLabel");
+  var runBtn= document.getElementById("runBtn");
+  var runBtn2=document.getElementById("runBtn2");
+  var ran = false, busy = false;
+
+  function sleep(ms){ return new Promise(function(r){ setTimeout(r, ms); }); }
+  function esc(s){ return String(s).replace(/&/g,"&").replace(/</g,"<").replace(/>/g,">"); }
+
+  function termLine(htmlStr){ var d=document.createElement("div"); d.innerHTML=htmlStr; term.appendChild(d); return d; }
+  function termClear(){ term.innerHTML=""; }
+
+  async function typeCmd(){
+    termClear();
+    var line = termLine('<span class="p">$</span> <span id="tc"></span><span class="cur"></span>');
+    var tc = line.querySelector("#tc");
+    for(var i=0;i<CMD.length;i++){
+      tc.textContent = CMD.slice(0,i+1);
+      if(!reduce) await sleep(12 + Math.random()*18);
+    }
+    line.querySelector(".cur").remove();
+  }
+
+  function renderItems(items){
+    rowsEl.innerHTML = "";
+    items.slice(0,6).forEach(function(it){
+      var d = document.createElement("div"); d.className = "row";
+      d.innerHTML = '<span class="nm">'+esc(it.name||"—")+'</span><span class="pr">'+esc(it.price||"—")+'</span>'
+        + (it.link ? '<span class="lk mono">'+esc(it.link)+'</span>' : '');
+      rowsEl.appendChild(d);
+    });
+    var delay = reduce ? 0 : 230;
+    Array.prototype.forEach.call(rowsEl.children, function(r,i){
+      setTimeout(function(){ r.classList.add("lit"); }, delay*i);
+    });
+    return delay*items.length;
+  }
+
+  function setStatus(ok, ms, count, note){
+    stat.innerHTML = ok
+      ? '<span class="ok">✓ '+count+' items</span><span>'+ms+'ms</span><span>live fetch</span>'
+      : '<span>'+esc(note||'sample data — API unreachable')+'</span>';
+  }
+
+  async function runLive(){
+    if(busy) return;
+    busy = true; ran = true;
+    runBtn.disabled = true; runBtn2.disabled = true;
+    runBtn.innerHTML = "Running…";
+    await typeCmd();
+    await sleep(reduce ? 0 : 350);
+
+    var t0 = performance.now(), items = null, tier = 1, ok = false;
+    try{
+      var res = await fetch(APP + "/api/preview", {
+        method:"POST", headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify({ url: TARGET, auto: true })
+      });
+      var j = await res.json();
+      if(res.ok && j.items && j.items.length){ items = j.items; tier = j.tier || 1; ok = true; }
+    }catch(e){ /* fall back to sample */ }
+
+    var ms = Math.round(performance.now() - t0);
+    pane.classList.remove("scanning"); void pane.offsetWidth; pane.classList.add("scanning");
+
+    if(ok){
+      selLbl.textContent = j.selector || "auto";
+      var wait = renderItems(items);
+      await sleep(wait + 300);
+      setStatus(true, ms, items.length);
+      termLine('<span class="dim">→ GET '+TARGET.slice(0,46)+'…</span>');
+      termLine('<span class="acc">tier '+tier+'</span><span class="dim"> · '+items.length+' items · '+ms+'ms · live</span>');
+    }else{
+      selLbl.textContent = ".product-wrapper";
+      var SAMPLE = [
+        {name:"Packard 255 G2", price:"$416.99", link:"/static/product/31"},
+        {name:"Aspire E1-510",  price:"$306.99", link:"/static/product/32"},
+        {name:"ThinkPad T540p", price:"$1,178.99", link:"/static/product/33"},
+        {name:"ProBook 450",    price:"$739.99", link:"/static/product/34"},
+        {name:"ThinkPad X240",  price:"$1,311.99", link:"/static/product/35"},
+        {name:"Aspire E1-572G", price:"$581.99", link:"/static/product/36"}
+      ];
+      var w2 = renderItems(SAMPLE);
+      await sleep(w2 + 300);
+      setStatus(false, 0, 0, "sample data — open the app for a live run");
+      termLine('<span class="dim">network unavailable — showing sample rows</span>');
+    }
+    runBtn.innerHTML = "▶&nbsp; Run it again";
+    runBtn.disabled = false; runBtn2.disabled = false;
+    busy = false;
+  }
+
+  /* idle attract loop until the first real run */
+  var DEMO = [
+    {name:"Packard 255 G2", price:"$416.99"},
+    {name:"Aspire E1-510",  price:"$306.99"},
+    {name:"ThinkPad T540p", price:"$1,178.99"},
+    {name:"ProBook 450",    price:"$739.99"},
+    {name:"ThinkPad X240",  price:"$1,311.99"},
+    {name:"Aspire E1-572G", price:"$581.99"}
+  ];
+  async function attract(){
+    if(ran) return;
+    await sleep(1200);
+    for(;;){
+      if(ran || document.hidden){ await sleep(800); continue; }
+      await typeCmd();
+      await sleep(400);
+      if(ran) break;
+      pane.classList.remove("scanning"); void pane.offsetWidth; pane.classList.add("scanning");
+      var w = renderItems(DEMO);
+      await sleep(w + 500);
+      stat.innerHTML = '<span class="ok">✓ 6 items</span><span>tier 1</span>';
+      await sleep(4200);
+      if(ran) break;
+    }
+  }
+
+  runBtn.addEventListener("click", runLive);
+  runBtn2.addEventListener("click", function(){
+    document.querySelector(".win-zone").scrollIntoView({behavior: reduce ? "auto" : "smooth", block:"center"});
+    runLive();
+  });
+
+  if(reduce){ renderItems(DEMO); stat.innerHTML='<span class="ok">✓ 6 items</span><span>tier 1</span>'; termClear();
+    termLine('<span class="p">$</span> '+esc(CMD)); }
+  else attract();
+})();
+</script>
+</body>
+</html>
