@@ -42,8 +42,8 @@
     <div v-else-if="keys.length === 0" class="bg-white rounded-lg shadow p-12 text-center text-gray-500">
       No keys yet. Create one to use the <code>/api/v1</code> endpoints.
     </div>
-    <div v-else class="bg-white rounded-lg shadow overflow-hidden">
-      <table class="w-full text-sm">
+    <div v-else class="bg-white rounded-lg shadow overflow-x-auto">
+      <table class="w-full text-sm min-w-165">
         <thead>
           <tr class="bg-gray-50 border-b text-left text-sm text-gray-600">
             <th class="px-4 py-3">Name</th>

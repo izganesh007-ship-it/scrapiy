@@ -18,9 +18,9 @@
       <p v-if="htmlLoaded" class="text-gray-400 text-xs mt-2">fetched via tier {{ tierUsed }}</p>
     </div>
 
-    <div v-if="htmlLoaded" class="grid grid-cols-3 gap-6">
+    <div v-if="htmlLoaded" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <!-- Clickable page preview -->
-      <div class="col-span-2 bg-white rounded-lg shadow p-4">
+      <div class="lg:col-span-2 bg-white rounded-lg shadow p-4">
         <p class="text-sm font-medium mb-2">
           {{ pickingField ? `Now click the element for field "${pickingField}"` : 'Click a repeating card (e.g. one product box)' }}
         </p>

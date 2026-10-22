@@ -6,9 +6,9 @@
     <!-- Target picker -->
     <div class="bg-white rounded-lg shadow p-4 mb-6">
       <label class="block text-xs font-medium text-gray-500 mb-1">Target page (real, public site)</label>
-      <div class="flex gap-2">
-        <input v-model="url" class="flex-1 px-3 py-2 border rounded-lg text-sm font-mono" />
-        <select v-model.number="presetIdx" @change="url = presets[presetIdx].url" class="px-3 py-2 border rounded-lg text-sm">
+      <div class="flex flex-col sm:flex-row gap-2">
+        <input v-model="url" class="flex-1 px-3 py-2 border rounded-lg text-sm font-mono min-w-0" />
+        <select v-model.number="presetIdx" @change="url = presets[presetIdx].url" class="px-3 py-2 border rounded-lg text-sm sm:w-56">
           <option v-for="(p, i) in presets" :key="p.url" :value="i">{{ p.label }}</option>
         </select>
       </div>
@@ -114,7 +114,7 @@
 
     <!-- Going further -->
     <div class="grid md:grid-cols-2 gap-4">
-      <div class="bg-white rounded-lg shadow p-5">
+      <div class="bg-white rounded-lg shadow p-5 min-w-0">
         <div class="flex items-center gap-2 mb-1">
           <span class="text-xs font-mono px-2 py-0.5 rounded bg-purple-100 text-purple-700">tier 2 · headless browser</span>
         </div>
@@ -125,7 +125,7 @@
         </button>
         <p v-if="browserError" class="text-red-500 text-xs mt-2">{{ browserError }}</p>
       </div>
-      <div class="bg-white rounded-lg shadow p-5">
+      <div class="bg-white rounded-lg shadow p-5 min-w-0">
         <h3 class="font-semibold text-gray-900">Use it from your own code</h3>
         <p class="text-xs text-gray-500 mt-1 mb-3">Save the flow as a Recipe, create an API key, then call it from anywhere:</p>
         <pre class="text-xs bg-gray-900 text-gray-200 rounded p-3 overflow-x-auto">{{ curlSnippet }}</pre>

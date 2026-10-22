@@ -10,7 +10,7 @@
     <!-- Create form -->
     <div v-if="showCreate" class="bg-white rounded-lg shadow p-6 mb-6">
       <h2 class="font-semibold mb-4">New Recipe</h2>
-      <div class="grid grid-cols-2 gap-4 mb-4">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
           <input v-model="form.name" placeholder="Laptop prices" class="w-full px-3 py-2 border rounded-lg" />
@@ -20,7 +20,7 @@
           <input v-model="form.url" placeholder="https://example.com/products" class="w-full px-3 py-2 border rounded-lg" />
         </div>
       </div>
-      <div class="grid grid-cols-3 gap-4 mb-4">
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Item selector</label>
           <input v-model="form.item" placeholder=".product-card" class="w-full px-3 py-2 border rounded-lg text-sm" />
@@ -83,7 +83,7 @@
     </div>
     <div v-else class="space-y-4">
       <div v-for="r in recipes" :key="r.id" class="bg-white rounded-lg shadow p-5">
-        <div class="flex items-start justify-between">
+        <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
           <div>
             <h3 class="font-semibold text-gray-900">{{ r.name }}</h3>
             <a :href="r.url" target="_blank" class="text-xs text-blue-500 hover:underline truncate block max-w-md">{{ r.url }}</a>

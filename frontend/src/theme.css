@@ -158,6 +158,26 @@ html[data-theme="dark"] .skeleton::after {
   background: linear-gradient(90deg, transparent, rgba(255,255,255,0.07), transparent);
 }
 
+/* ---------- mobile ---------- */
+@media (max-width: 760px) {
+  html, body { overflow-x: hidden; }   /* kill horizontal scroll from strays */
+  .mac-nav { gap: 10px; padding: 8px 12px; margin-left: 8px; margin-right: 8px; max-width: none; }
+  .mac-nav .lights { display: none !important; }  /* inline style needs the hammer */
+  .mac-nav .brand { font-size: 14px; flex-shrink: 0; }
+  .mac-nav .tabs {
+    display: flex; gap: 2px;
+    overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none;
+    flex: 1; min-width: 0;
+  }
+  .mac-nav .tabs::-webkit-scrollbar { display: none; }
+  .mac-nav .tab { padding: 6px 10px; white-space: nowrap; font-size: 12.5px; }
+  .mac-toggle { margin-left: 0; flex-shrink: 0; }
+  .container { padding-left: 14px !important; padding-right: 14px !important; max-width: 100% !important; }
+  /* inputs must never force their card wider than the screen */
+  input, select, textarea { max-width: 100%; }
+  pre, code { overflow-x: auto; word-break: break-word; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }

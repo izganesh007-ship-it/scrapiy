@@ -49,18 +49,18 @@ const App = defineComponent({
       h('div', { class: 'min-h-screen' }, [
         // macOS frosted menu bar
         h('header', { class: 'mac-nav' }, [
-          h('div', { style: 'display:flex;gap:7px;align-items:center' }, [
+          h('div', { class: 'lights', style: 'gap:7px;display:flex' }, [
             h('span', { style: 'width:12px;height:12px;border-radius:50%;background:#ff5f57;display:inline-block' }),
             h('span', { style: 'width:12px;height:12px;border-radius:50%;background:#febc2e;display:inline-block' }),
             h('span', { style: 'width:12px;height:12px;border-radius:50%;background:#28c840;display:inline-block' }),
           ]),
           h('span', { class: 'brand' }, 'Scrapiy'),
-          ...pages.map(p =>
+          h('nav', { class: 'tabs' }, pages.map(p =>
             h('button', {
               class: ['tab', current.value === p.id ? 'on' : ''],
               onClick: () => nav(p.id),
             }, p.label)
-          ),
+          )),
           h('div', { class: 'mac-toggle' }, [
             h('button', {
               class: theme.value === 'light' ? 'on' : '',
