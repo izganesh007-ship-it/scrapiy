@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scrapiy - Free Web Scraper</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    // Set theme before first paint to avoid flash. Priority: ?theme= > localStorage > OS preference
+    (function () {
+      var t = new URLSearchParams(location.search).get('theme');
+      if (t !== 'light' && t !== 'dark') {
+        try { t = localStorage.getItem('scrapiy-theme'); } catch (e) {}
+      }
+      if (t !== 'light' && t !== 'dark') {
+        t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      }
+      document.documentElement.setAttribute('data-theme', t);
+    })();
+  </script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+  <div id="app"></div>
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>

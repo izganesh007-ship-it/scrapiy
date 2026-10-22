@@ -1,0 +1,36 @@
+# dependencies
+node_modules/
+
+# build output
+frontend/dist/
+dist/
+
+# wrangler local state (D1 data, dev caches)
+.wrangler/
+
+# logs
+*.log
+
+# local env / secrets
+.env
+.env.*
+.dev.vars
+
+# OS / editor
+.DS_Store
+Thumbs.db
+
+# screenshots & scratch files
+*.png
+dom.html
+
+# stale duplicate dir (empty skeleton)
+scrapiy/
+
+# landing page (kept local, not part of the app)
+landing.html
+
+# stale/debug files
+worker/worker.ts
+worker/wrangler.toml
+worker/debug-*.mjs

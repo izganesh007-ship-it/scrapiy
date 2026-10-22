@@ -1,0 +1,41 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "scrapiy",
+  "main": "worker/src/index.ts",
+  "compatibility_date": "2026-10-20",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": {
+    "enabled": true
+  },
+  "assets": {
+    "directory": "frontend/dist"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "scrapiy_jobs",
+      "database_id": "6d5381c6-07e1-46ff-b15a-426feda1a8bd"
+    }
+  ],
+  "kv_namespaces": [
+    {
+      "binding": "EXPORTS",
+      "id": "e2a35f00d06a4639bb0275990728f8a1",
+      "preview_id": "6bc8896fe45c4623a080aaf157cb3da3"
+    }
+  ],
+  "queues": {
+    "producers": [
+      {
+        "binding": "QUEUE",
+        "queue": "scrape-jobs"
+      }
+    ]
+  },
+  "browser": {
+    "binding": "BROWSER"
+  },
+  "triggers": {
+    "crons": ["*/15 * * * *"]
+  }
+}

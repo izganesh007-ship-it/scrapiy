@@ -1,0 +1,20 @@
+{
+  "name": "scrapiy",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Free self-hosted visual web scraper — Cloudflare Workers + D1 + Pages + Railway Playwright",
+  "scripts": {
+    "dev": "cd frontend && npm run dev",
+    "dev:worker": "cd worker && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "build": "cd frontend && npm run build",
+    "typecheck": "cd worker && npx tsc --noEmit",
+    "deploy:worker": "cd worker && npm run deploy",
+    "deploy:frontend": "cd frontend && npx wrangler pages deploy dist",
+    "deploy": "wrangler deploy",
+    "preview": "wrangler dev"
+  },
+  "devDependencies": {
+    "wrangler": "^4.151.3"
+  }
+}
